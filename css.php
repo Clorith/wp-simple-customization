@@ -57,7 +57,7 @@
                     $setting['name'],
                     array(
                         'default'   => $setting['default'],
-                        'transport' => 'refresh'
+                        'transport' => 'postMessage'
                     )
                 );
 
@@ -152,6 +152,13 @@
 
             wp_enqueue_style( $theme->stylesheet . '-custom-css' );
         }
+        function style_customize() {
+            $theme = wp_get_theme();
+
+            wp_register_script( $theme->stylesheet . '-custom-js', home_url( '/' . $theme->stylesheet . '-custom-css.js' ), array( 'jquery', 'customize-preview' ), '1.0.0', true );
+
+            wp_enqueue_script( $theme->stylesheet . '-custom-js' );
+        }
         function init_build() {
             $theme = wp_get_theme();
 
@@ -163,6 +170,15 @@
 
                 die();
             }
+
+            //  If the current URL requested is our customized css one, serve it up nicely with an include then kill any further output so WP doens't also load twice
+            if ( 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']  == home_url( '/' . $theme->stylesheet . '-custom-css.js?ver=1.0.0', 'http' ) )
+            {
+                header( 'Content-Type: text/javascript' );
+                include_once( dirname( __FILE__ ) . '/style.js.php' );
+
+                die();
+            }
         }
     }
 
@@ -170,4 +186,5 @@
 
     add_action( 'customize_register', array( $css, 'build' ) );
     add_action( 'wp_enqueue_scripts', array( $css, 'style' ) );
+    add_action( 'customize_preview_init', array( $css, 'style_customize' ) );
     add_action( 'init', array( $css, 'init_build' ) );
