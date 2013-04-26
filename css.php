@@ -1,18 +1,29 @@
 <?php
 /**
- * User: Marius Jensen
- * Date: 26.04.13
- * Time: 10:44
+ * Class css
+ *
+ * Used as a simpler interface to add WP Customize API elements, with a lower chance of fatal errors due to missing settings or controllers
  */
-
     class css
     {
+        /**
+         * @var array $sections Used for storing our added sections before displaying them
+         * @var array $settings The settings we wish to implement
+         */
         private $sections = array();
         public $settings = array();
 
+        /**
+         * Add a section or setting to the Customize screen
+         *
+         * @param string $name Name your section or setting (should be unique)
+         * @param string $type The type of the option being added (section or setting)
+         * @param array $args Arguments accepted are the ones normally accepted by the WP Customize API
+         * @return bool
+         */
         function add( $name, $type, $args = array() )
         {
-            //  First we set the name, this is an always existent constant, and it's nice ot ahve it as the first data point
+            //  First we set the name, this is an always existent constant, and it's nice to have it as the first data point
             $array = array(
                 'name' => $name
             );
@@ -23,7 +34,7 @@
                 $array[$item] = $data;
             }
 
-            //  Finally, enter the data into the apropriate data container
+            //  Finally, enter the data into the appropriate data container
             switch ( $type )
             {
                 case 'section':
@@ -36,9 +47,14 @@
             return true;
         }
 
+        /**
+         * The build function generates our customize screen
+         *
+         * @param mixed $custom WP Customize class
+         */
         function build( $custom )
         {
-            //  Loop through the defined sections, sections hold our settings so it makes sense to define these first
+            //  Loop through the defined sections, sections hold our settings fields so it makes sense to define these first
             foreach( $this->sections AS $section )
             {
                 $custom->add_section(
@@ -61,7 +77,8 @@
                     )
                 );
 
-                //  Since a setting also requires a controller, we initiate the controller straight away
+                //  Since a setting also requires a controller, we initiate the controller straight away using the setting name as identifier.
+                //  This means we won't get fatal errors for missing setting for a controller which may happen if we do this manually per setting!
                 switch( $setting['type'] )
                 {
                     case 'header':
@@ -145,6 +162,9 @@
             }
         }
 
+        /**
+         * Queue the stylesheet for our primary website
+         */
         function style() {
             $theme = wp_get_theme();
 
@@ -152,6 +172,10 @@
 
             wp_enqueue_style( $theme->stylesheet . '-custom-css' );
         }
+
+        /**
+         * Queue the javascript file allowing for real time previews without reloading the frame
+         */
         function style_customize() {
             $theme = wp_get_theme();
 
@@ -159,10 +183,18 @@
 
             wp_enqueue_script( $theme->stylesheet . '-custom-js' );
         }
+
+        /**
+         * Our build function for init, this is kind of magical
+         *
+         * We load our php scripts (that generate the javascript and css file) in using this function.
+         *
+         * Older browsers often define the type of file by file extension and ignores MIME type, this will help them understand what data they should display.
+         */
         function init_build() {
             $theme = wp_get_theme();
 
-            //  If the current URL requested is our customized css one, serve it up nicely with an include then kill any further output so WP doens't also load twice
+            //  If the current URL requested is our customized css one, serve it up nicely with an include then kill any further output so WP doesn't also load twice
             if ( 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']  == home_url( '/' . $theme->stylesheet . '-custom-css.css?ver=1.0.0', 'http' ) )
             {
                 header( 'Content-Type: text/css' );
@@ -171,7 +203,7 @@
                 die();
             }
 
-            //  If the current URL requested is our customized css one, serve it up nicely with an include then kill any further output so WP doens't also load twice
+            //  If the current URL requested is our customized js one, serve it up nicely with an include then kill any further output so WP doesn't also load twice
             if ( 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']  == home_url( '/' . $theme->stylesheet . '-custom-css.js?ver=1.0.0', 'http' ) )
             {
                 header( 'Content-Type: text/javascript' );
