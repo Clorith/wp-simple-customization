@@ -14,6 +14,18 @@
         public $settings = array();
 
         /**
+         * Class constructor
+         * Initiates various WP hooks that we need for this to actually work
+         */
+        function __construct()
+        {
+            add_action( 'customize_register', array( $this, 'build' ) );
+            add_action( 'wp_enqueue_scripts', array( $this, 'style' ) );
+            add_action( 'customize_preview_init', array( $this, 'style_customize' ) );
+            add_action( 'init', array( $this, 'init_build' ) );
+        }
+
+        /**
          * Add a section or setting to the Customize screen
          *
          * @param string $name Name your section or setting (should be unique)
@@ -198,7 +210,7 @@
             if ( 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']  == home_url( '/' . $theme->stylesheet . '-custom-css.css?ver=1.0.0', 'http' ) )
             {
                 header( 'Content-Type: text/css' );
-                include_once( dirname( __FILE__ ) . '/style.css.php' );
+                $this->generate_css();
 
                 die();
             }
@@ -207,16 +219,44 @@
             if ( 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']  == home_url( '/' . $theme->stylesheet . '-custom-css.js?ver=1.0.0', 'http' ) )
             {
                 header( 'Content-Type: text/javascript' );
-                include_once( dirname( __FILE__ ) . '/style.js.php' );
+                $this->generate_js();
 
                 die();
             }
         }
+
+        /**
+         * CSS File generator code
+         * Used in <themename>-custom-css.css
+         */
+        function generate_css()
+        {
+            foreach( $this->settings AS $setting )
+            {
+                echo $setting['object'] . " { " . $setting['selector'] . ": " . get_theme_mod( $setting['name'] ) . "; }\n";
+            }
+        }
+
+        /**
+         * JavaScript file generator code
+         * Used in <themename>-custom-css.js for the responsive live previews
+         */
+        function generate_js()
+        {
+            echo 'jQuery(document).ready(function ($) {';
+
+            foreach( $this->settings AS $setting )
+            {
+                echo "
+                        wp.customize( '" . $setting['name'] . "', function( value ) {
+                            value.bind( function( newval ) {
+                                $('" . $setting['object'] . "').css('" . $setting['selector'] . "', newval );
+                            } );
+                        } );
+                        \n\n
+                    ";
+            }
+
+            echo '});';
+        }
     }
-
-    $css = new css();
-
-    add_action( 'customize_register', array( $css, 'build' ) );
-    add_action( 'wp_enqueue_scripts', array( $css, 'style' ) );
-    add_action( 'customize_preview_init', array( $css, 'style_customize' ) );
-    add_action( 'init', array( $css, 'init_build' ) );

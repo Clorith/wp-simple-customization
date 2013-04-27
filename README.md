@@ -3,7 +3,9 @@ wp-simple-customization
 
 Usage:
 ```php
-include_once( 'css/css.php' );
+include_once( 'css.php' );
+
+$css = new css();
 
 $css->add(
     'theme_primary',                        // Customize name (must be unique)
@@ -40,7 +42,3 @@ The type accepts one of the following
  - image
  - background
  - header
-
-Caveats
--------------------
-It uses a static variable (`$css`) as the class container, this because I utilize it other places as well, will be adressed with some refactoring.
