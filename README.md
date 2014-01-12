@@ -42,3 +42,6 @@ The type accepts one of the following
  - image
  - background
  - header
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Clorith/wp-simple-customization/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
